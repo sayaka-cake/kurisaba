@@ -1,5 +1,19 @@
 <?php
 
+function from_human_readable($val)
+{
+    $ret = 0;
+    switch (substr ($val, -1))
+    {
+        case 'K': case 'k': $ret = (int)$val * 1024; break;
+        case 'M': case 'm': $ret = (int)$val * 1048576; break;
+        case 'G': case 'g': $ret = (int)$val * 1073741824; break;
+        default: $ret = (int)$val;
+    }
+    return $ret;
+}
+if(from_human_readable(ini_get("memory_limit")) < 134217728) ini_set("memory_limit", "128M");
+
 mb_internal_encoding("UTF-8");
 // Sets error reporting to hide notices.
 error_reporting(E_ALL ^ E_NOTICE);
@@ -33,9 +47,12 @@ if (!$cache_loaded) {
 
 	// Основные настройки борды
 		$cf['KU_NAME']           = 'Insert your text here';   // Название имиджборды.
+		$cf['KU_MAINPAGE']       = "front.php";               // Имя начальной странички сайта (front.php - "заставка", kusaba.php - основная страница дефотной борды).
 		$cf['KU_BASE_HOST']      = "examplechan.org";         // Имя сайта борды (не обязательно, но на кривых серверах без него может не работать).
 		$cf['KU_DEFAULTBOARD']   = 'b';                       // Борда "по умолчанию", показываемая в правом фрейме фреймсета.
 		$cf['KU_SEARCH_PHRASES'] = 'Фраза 1#Фраза 2#Фраза 3'; // Случайные фразы, показываемые в окошках поиска текста.
+		$cf['KU_SEARCH_BOARD']   = 'b';                       // Дефолтная борда в поле ввода поиска.
+		$cf['KU_SEARCH_THREAD']  = '1';                       // Дефолтный тред в поле ввода поиска.
 		$cf['KU_BANREASON']      = '';                        // Причина бана по умолчанию.
 		$cf['KU_BANMSG']         = '<br /><font color="#FF0000"><b>(USER WAS BANNED FOR THIS POST)</b></font>'; // Сообщение к посту, по которому дан бан (добавляется при включённой настройке "Add ban message").
 		$cf['KU_RANDOMSEED']     = 'ENTERRANDOMSHIT';         // Инициализационное значение для md5-Функций. Лучше задать побольше, 35+ символов. Нельзя менять после запуска борды, иначе слетят данные о ip постов, трипкоды с двумя восклицательными знаками и т.п.
@@ -43,7 +60,7 @@ if (!$cache_loaded) {
 	// Совместимость и особенности сервера
 		$cf['KU_CSSVER']         = '005';                   // "Версия" CSS. Можно менять при изменении css-файлов, если используется кэширующий прокси, на котором нельзя сбросить кэш.
 		$cf['KU_JSVER']          = '007';                   // "Версия" JS. Можно менять при изменении javascript-файлов, если используется кэширующий прокси, на котором нельзя сбросить кэш.
-		$cf['KU_FFMPEGPATH']     = '/usr/local/bin/ffmpeg'; // Путь к FFMPEG для создания картинок-превьюшек WEBM. На данный момент не используется.
+		$cf['KU_CURL_PROXY']     = 'none';                  // Если нужен прокси для загрузки
 		$cf['KU_CURL_INTERFACE'] = '';                      // Сетевой интерфейс для загрузки файла по ссылке (например, 'tun0'). Чтобы при загрузке файла не палить IP, рекомендуется поднять VPN до какого-нибудь сервера, который не жалко подставлять под DDoS и указать здесь сетевой интерфейс VPN.
 
 	// Настройки базы данных
@@ -64,6 +81,7 @@ if (!$cache_loaded) {
 		$cf['KU_DATEFORMAT']   = 'D Y M d H:i:s';   // Формат даты в постах (например, 'd/m/y(D)H:i').
 
 	// Разные фичи
+		$cf['KU_SAVEIP']            = true; // Сохранять ли IP постов. Если отключить, то будут сохраняться только MD5, а в качестве IP будет использоваться 0.0.0.0.
 		$cf['KU_EXPAND']            = true; // Включить возможность разворотат тредов на странице борд.
 		$cf['KU_QUICKREPLY']        = true; // Включить возможность быстрого ответа на пост.
 		$cf['KU_FIRSTLAST']         = true; // Включить возможность смотреть не только весь тред, но и первые 100/последние 50 постов.
@@ -99,7 +117,7 @@ if (!$cache_loaded) {
 	// Пути. Скорее всего менять не потребуется.
 		$cf['KU_ROOTDIR']           = realpath(dirname(__FILE__))."/";      // Путь в файловой системе, где лежит движок борды, с завершающим '/'.
 		$cf['KU_WEBFOLDER']         = '/';                                  // Путь в URL до движка борды, с завершающим '/'. К примеру, для "http://www.yoursite.com/misc/kusaba/" это должно быть "/misc/kusaba/".
-		$cf['KU_PROTO']             = 'https://'                            // Протокол - http или https (с двумя завершающими слэшами).
+		$cf['KU_PROTO']             = 'https://';                           // Протокол - http или https (с двумя завершающими слэшами).
 		$cf['KU_TEMPLATEDIR']       = $cf['KU_ROOTDIR'] . 'dwoo/templates'; // Путь к шаблонам для dwoo
 		$cf['KU_CACHEDTEMPLATEDIR'] = $cf['KU_ROOTDIR'] . 'tmp/dwoo';       // Путь, куда dwoo кладёт скомпилированные шаблоны ('' отключает кэширование шаблонов).
 
@@ -143,7 +161,7 @@ if (!$cache_loaded) {
 		$cf['KU_THUMBHEIGHT']      = 255;  // Максимальная высота предпросмотра картинки в ОП-посте.
 		$cf['KU_REPLYTHUMBWIDTH']  = 255;  // Максимальная ширина предпросмотра картинки в ответе в тред.
 		$cf['KU_REPLYTHUMBHEIGHT'] = 255;  // Максимальная высота предпросмотра картинки в ответе в тред.
-		$cf['KU_THUMBMETHOD']      = 'imagemagick+gifsicle'; // Метод создания предпросмотра jpg, gif и png ('gd' или 'imagemagick+gifsicle'). Анимированные предпросмотры доступны только в последнем варианте.
+		$cf['KU_THUMBMETHOD']      = 'imagemagick+gifsicle'; // Метод создания предпросмотра jpg, gif, webm и png ('gd' или 'imagemagick+gifsicle'). Анимированные предпросмотры доступны только в последнем варианте.
 		$cf['KU_THUMBMSG']         = false; // Показывать сообщение "Thumbnail displayed, click image for full size." у предпросмотров картинок.
 
 	// Теги файлов для upload-досок. Для отключения можно установить в ''.
@@ -174,6 +192,12 @@ if (!$cache_loaded) {
 	// Debug
 		$cf['KU_DEBUG'] = false; // When enabled, debug information will be printed (Warning: all queries will be shown publicly)
 
+	// Host and domain stuff
+		$cf['KU_HOST'] = isset($_SERVER['HTTP_HOST'])? preg_replace("/[^A-Za-z0-9.:]/", '', $_SERVER['HTTP_HOST'] ) : $cf['KU_BASE_HOST']; // escape string
+		$cf['KU_DOMAIN'] = '.' . $cf['KU_HOST']; // Used in cookies for the domain parameter.  Should be a period and then the top level domain, which will allow the cookies to be set for all subdomains.
+		$cf['KU_WEBPATH'] = $cf['KU_PROTO'] . $cf['KU_HOST'];
+		$cf['KU_REMOTE_ADDR'] = $_SERVER['REMOTE_ADDR'];
+
 	// Board subdomain/alternate directory (optional, change to enable)
 		// DO NOT CHANGE THESE IF YOU DO NOT KNOW WHAT YOU ARE DOING!!
 		$cf['KU_BOARDSDIR']    = $cf['KU_ROOTDIR'];
@@ -190,11 +214,6 @@ if (!$cache_loaded) {
 		$cf['KU_TAGS']       = serialize($cf['KU_TAGS']);
 		$cf['KU_TRIPS']      = serialize($cf['KU_TRIPS']);
 
-	// Host and domain stuff
-		$cf['KU_HOST'] = isset($_SERVER['HTTP_HOST'])? preg_replace("/[^A-Za-z0-9.:]/", '', $_SERVER['HTTP_HOST'] ) : $cf['KU_BASE_HOST']; // escape string
-		$cf['KU_DOMAIN'] = '.' . $cf['KU_HOST']; // Used in cookies for the domain parameter.  Should be a period and then the top level domain, which will allow the cookies to be set for all subdomains.
-		$cf['KU_WEBPATH'] = $cf['KU_PROTO'] . $cf['KU_HOST'];
-
 		if (substr($cf['KU_WEBFOLDER'], -2) == '//') { $cf['KU_WEBFOLDER'] = substr($cf['KU_WEBFOLDER'], 0, -1); }
 		if (substr($cf['KU_BOARDSFOLDER'], -2) == '//') { $cf['KU_BOARDSFOLDER'] = substr($cf['KU_BOARDSFOLDER'], 0, -1); }
 		if (substr($cf['KU_CGIFOLDER'], -2) == '//') { $cf['KU_CGIFOLDER'] = substr($cf['KU_CGIFOLDER'], 0, -1); }
@@ -206,7 +225,7 @@ if (!$cache_loaded) {
 		if ($cf['KU_APC']) {
 			apc_define_constants('config', $cf);
 		}
-		while (list($key, $value) = each($cf)) {
+		foreach ($cf as $key => $value) {
 			define($key, $value);
 		}
 		unset($cf);
@@ -234,6 +253,13 @@ _textdomain('kusaba');
 _setlocale(LC_ALL, KU_LOCALE);
 _bindtextdomain('kusaba', KU_ROOTDIR . 'inc/lang');
 _bind_textdomain_codeset('kusaba', KU_CHARSET);
+
+// Cookies
+function setcookie_strict(string $name, string $value = "", int $expires_or_options = 0, string $path = "", string $domain = "", bool $secure = false, bool $httponly = false): bool
+{
+	// PHP < 7.3.0 (unsupported for now): return setcookie($name, $value, $expires_or_options, $path, $domain, $secure, $httponly);
+	return setcookie($name, $value, [ 'expires' => $expires_or_options, 'path' => $path, 'domain' => $domain, 'secure' => $secure, 'httponly' => $httponly, 'samesite' => 'Strict' ]);
+}
 
 // SQL  database
 if (!isset($tc_db) && !isset($preconfig_db_unnecessary)) {
@@ -266,12 +292,12 @@ function stripslashes_deep($value)
 } 
 
 // Thanks Z
-if (get_magic_quotes_gpc()) {
+if (version_compare(PHP_VERSION, '7.4.0', '<') && get_magic_quotes_gpc()) {
 	$_POST = array_map('stripslashes_deep', $_POST);
 	$_GET = array_map('stripslashes_deep', $_GET);
 	$_COOKIE = array_map('stripslashes_deep', $_COOKIE);
 }
-if (get_magic_quotes_runtime()) {
+if (version_compare(PHP_VERSION, '5.4.0', '<') && get_magic_quotes_runtime()) {
 	set_magic_quotes_runtime(0);
 }
 

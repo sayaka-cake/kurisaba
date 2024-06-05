@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset={%KU_CHARSET}" />
@@ -15,6 +15,7 @@
 		var this_board_dir = '{$board.name}';
 		var ku_boardspath = '{%KU_BOARDSPATH}';
 		var ku_cgipath = '{%KU_CGIPATH}';
+		var ku_defaultboard = '{%KU_DEFAULTBOARD}';
 		var ku_maxfilesize = 0;
 		var style_cookie = "kustyle";
 		var locale = '{$locale}';
@@ -26,7 +27,7 @@
 //--></script>
 <link rel="stylesheet" type="text/css" href="{$cwebpath}css/img_global.css?v={%KU_CSSVER}" />
 {loop $styles}
-	<link rel="{if $ neq %KU_ACTIVESTYLE}alternate {/if}stylesheet" type="text/css" href="{%KU_WEBFOLDER}css/styles/menu_{$}.css?v={%KU_CSSVER}" title="{$|capitalize}" />
+	<link rel="{if $ neq %KU_DEFAULTSTYLE}alternate {/if}stylesheet" type="text/css" href="{%KU_WEBFOLDER}css/styles/menu_{$}.css?v={%KU_CSSVER}" title="{$|capitalize}" />
 {/loop}
 {loop $ku_styles}
 	<link rel="{if $ neq $__.ku_defaultstyle}alternate {/if}stylesheet" type="text/css" href="{$__.cwebpath}css/styles/{$}.css?v={%KU_CSSVER}" title="{$|capitalize}" />

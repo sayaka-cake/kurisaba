@@ -10,12 +10,12 @@
 			
 			{if ($post.file neq '' || $post.file_type neq '' ) && (( $post.videobox eq '' && $post.file neq '') && $post.file neq 'removed')}
 				<span class="filesize">
-				{if $post.file_type eq 'mp3'}
+				{if $post.file_type eq 'mp3' || $post.file_type eq 'ogg' || $post.file_type eq 'm4a'}
 					{t}Audio{/t}
 				{else}
 					{t}File{/t}
 				{/if}
-				{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'png' && $post.videobox eq ''}
+				{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'webp' && $post.file_type neq 'png' && $post.videobox eq ''}
 					<a 
 					{if %KU_NEWWINDOW}
 						target="_blank" 
@@ -39,16 +39,11 @@
 					{$post.file}.{$post.file_type}</a>
 				{/if}
 				- ({$post.file_size_formatted}
-				{if $post.id3.comments_html.bitrate neq 0 || $post.id3.audio.sample_rate neq 0}
-					{if $post.id3.audio.bitrate neq 0}
-						- {round($post.id3.audio.bitrate / 1000)} kbps
-						{if $post.id3.audio.sample_rate neq 0}
-							- 
-						{/if}
-					{/if}
-					{if $post.id3.audio.sample_rate neq 0}
-						{$post.id3.audio.sample_rate / 1000} kHz
-					{/if}
+				{if $post.id3.audio.bitrate neq 0}
+					- {round($post.id3.audio.bitrate / 1000)} kbps
+				{/if}
+				{if $post.id3.audio.sample_rate neq 0}
+					- {$post.id3.audio.sample_rate / 1000} kHz
 				{/if}
 				{if $post.image_w > 0 && $post.image_h > 0}
 					, {$post.image_w}x{$post.image_h}
@@ -63,7 +58,7 @@
 				</span>
 				{if %KU_THUMBMSG}
 					<span class="thumbnailmsg"> 
-					{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'png' && $post.videobox eq ''}
+					{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'webp' && $post.file_type neq 'png' && $post.videobox eq ''}
 						{t}Extension icon displayed, click image to open file.{/t}
 					{else}
 						{t}Thumbnail displayed, click image for full size.{/t}
@@ -72,7 +67,7 @@
 				{/if}
 				<br />
 			{/if}
-			{if $post.videobox eq '' && $post.file neq '' && ( $post.file_type eq 'jpg' || $post.file_type eq 'gif' || $post.file_type eq 'png')}
+			{if $post.videobox eq '' && $post.file neq '' && ( $post.file_type eq 'jpg' || $post.file_type eq 'webp' || $post.file_type eq 'gif' || $post.file_type eq 'png')}
 				{if $post.file eq 'removed'}
 					<div class="nothumb">
 						{t}File<br />Removed{/t}
@@ -230,12 +225,12 @@
 						<span id="dnb-{$board.name}-{$post.id}-n"></span>
 						{if ($post.file neq '' || $post.file_type neq '' ) && (( $post.videobox eq '' && $post.file neq '') && $post.file neq 'removed')}
 							<br /><span class="filesize">
-							{if $post.file_type eq 'mp3'}
+							{if $post.file_type eq 'mp3' || $post.file_type eq 'ogg' || $post.file_type eq 'm4a'}
 								{t}Audio{/t}
 							{else}
 								{t}File{/t}
 							{/if}
-							{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'png' && $post.videobox eq ''}
+							{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'webp' && $post.file_type neq 'png' && $post.videobox eq ''}
 								<a 
 								{if %KU_NEWWINDOW}
 									target="_blank" 
@@ -259,16 +254,11 @@
 								{$post.file}.{$post.file_type}</a>
 							{/if}
 							- ({$post.file_size_formatted}
-							{if $post.id3.comments_html.bitrate neq 0 || $post.id3.audio.sample_rate neq 0}
-								{if $post.id3.audio.bitrate neq 0}
-									- {round($post.id3.audio.bitrate / 1000)} kbps
-									{if $post.id3.audio.sample_rate neq 0}
-										- 
-									{/if}
-								{/if}
-								{if $post.id3.audio.sample_rate neq 0}
-									{$post.id3.audio.sample_rate / 1000} kHz
-								{/if}
+							{if $post.id3.audio.bitrate neq 0}
+								- {round($post.id3.audio.bitrate / 1000)} kbps
+							{/if}
+							{if $post.id3.audio.sample_rate neq 0}
+								- {$post.id3.audio.sample_rate / 1000} kHz
 							{/if}
 							{if $post.image_w > 0 && $post.image_h > 0}
 								, {$post.image_w}x{$post.image_h}
@@ -283,7 +273,7 @@
 							</span>
 							{if %KU_THUMBMSG}
 								<span class="thumbnailmsg"> 
-								{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'png' && $post.videobox eq ''}
+								{if $post.file_type neq 'jpg' && $post.file_type neq 'gif' && $post.file_type neq 'webp' && $post.file_type neq 'png' && $post.videobox eq ''}
 									{t}Extension icon displayed, click image to open file.{/t}
 								{else}
 									{t}Thumbnail displayed, click image for full size.{/t}
@@ -292,7 +282,7 @@
 							{/if}
 
 						{/if}
-						{if $post.videobox eq '' && $post.file neq '' && ( $post.file_type eq 'jpg' || $post.file_type eq 'gif' || $post.file_type eq 'png')}
+						{if $post.videobox eq '' && $post.file neq '' && ( $post.file_type eq 'jpg' || $post.file_type eq 'gif' || $post.file_type eq 'png' || $post.file_type eq 'webp')}
 							<br />
 							{if $post.file eq 'removed'}
 								<div class="nothumb">

@@ -97,11 +97,11 @@ class Upload {
 					{
 						if ($_POST['embed'] != '')
 						{
-							$_POST['embed'] = strip_tags(substr($_POST['embed'], 0, 20));
+							$_POST['embed'] = strip_tags($_POST['embed']);
 							$video_id = $_POST['embed'];
 							$this->file_name = $video_id;
 
-							if ($video_id != '' && strpos($video_id, '@') == false && strpos($video_id, '&') == false) {
+							if ($video_id != '' && strpos($video_id, '@') == false && strpos($video_id, '?') == false) {
 
 								$embeds = $tc_db->GetAll("SELECT HIGH_PRIORITY * FROM `" . KU_DBPREFIX . "embeds`");
 								$worked = false;
@@ -313,7 +313,7 @@ class Upload {
 						if (!is_file($file['tmp_name']) || !is_readable($file['tmp_name'])) {
 							$pass = false;
 						} else {
-							if(in_array($this->file_type, array('.jpg', '.gif', '.png'))) {
+							if(in_array($this->file_type, array('.jpg', '.gif', '.webp', '.png'))) {
 								if (!@getimagesize($file['tmp_name'])) {
 									$pass = false;
 								}
@@ -339,7 +339,8 @@ class Upload {
 							$this->imgWidth = $svg->width;
 							$this->imgHeight = $svg->height;
 						} 
-						elseif($this->file_type == '.webm') {
+						elseif($this->file_type == '.webm' || $this->file_type == '.mp4' ) {
+							// I honestly have no idea what the hay is going on there. Probably a dirty hack, should remove sometimes I guess.
 							$webminfo = $pass;
 							$this->imgWidth = $webminfo['width'];
 							$this->imgHeight = $webminfo['height'];
@@ -365,7 +366,7 @@ class Upload {
 
 								$this->file_location = KU_BOARDSDIR . $board_class->board['name'] . '/' . $srcdir . '/' . $this->file_name . $this->file_type;
 
-								if($this->file_type != '.webm') {
+								if($this->file_type != '.webm' && $this->file_type != '.mp4' ) {
 									$this->file_thumb_location = KU_BOARDSDIR . $board_class->board['name'] . '/' . $thumbdir . '/' . $this->file_name . 's' . $this->file_type;
 									$this->file_thumb_cat_location = $this->file_thumb_location;
 
@@ -448,19 +449,15 @@ class Upload {
 								{
 									return _gettext('A file by that name already exists');
 								}
-								if($this->file_type == '.mp3' || $this->file_type == '.ogg')
+								if($this->file_type == '.mp3' || $this->file_type == '.ogg' || $this->file_type == '.m4a')
 								{
 									require_once(KU_ROOTDIR . 'lib/getid3/getid3.php');
 
 									$getID3 = new getID3;
 									$getID3->analyze($file['tmp_name']);
-									if (isset($getID3->info['id3v2']['APIC'][0]['data']) && isset($getID3->info['id3v2']['APIC'][0]['image_mime'])) {
-										$source_data = $getID3->info['id3v2']['APIC'][0]['data'];
-										$mime = $getID3->info['id3v2']['APIC'][0]['image_mime'];
-									}
-									elseif (isset($getID3->info['id3v2']['PIC'][0]['data']) && isset($getID3->info['id3v2']['PIC'][0]['image_mime'])) {
-										$source_data = $getID3->info['id3v2']['PIC'][0]['data'];
-										$mime = $getID3->info['id3v2']['PIC'][0]['image_mime'];
+									if (isset($getID3->info['comments']['picture'][0]['data']) && isset($getID3->info['comments']['picture'][0]['image_mime'])) {
+										$source_data = $getID3->info['comments']['picture'][0]['data'];
+										$mime = $getID3->info['comments']['picture'][0]['image_mime'];
 									}
 
 									if($source_data) {
@@ -474,6 +471,9 @@ class Upload {
 										} else if (preg_match("/gif/", $mime)) {
 											$ext = ".gif";
 											imagegif($im, $this->file_location.".tmp");
+										} else if (preg_match("/webp/", $mime)) {
+											$ext = ".webp";
+											imagewebp($im, $this->file_location.".tmp");
 										}
 										$this->file_thumb_location = KU_BOARDSDIR . $board_class->board['name'] . '/' . $thumbdir . '/' . $this->file_name .'s'. $ext;
 										if (!$this->isreply)
@@ -527,7 +527,7 @@ class Upload {
 								{
 									/* Check if the MIMEs don't match up */
 									$finfo = finfo_open( FILEINFO_MIME_TYPE );
-									if (!$finfo || finfo_file($finfo, $this->file_location) != $filetype_required_mime)
+									if (!$finfo || !in_array(finfo_file($finfo, $this->file_location), explode(';', $filetype_required_mime)))
 									{
 										/* Delete the file we just uploaded and kill the script */
 										unlink($this->file_location);
@@ -624,38 +624,5 @@ class Upload {
 		// Success or no embed.
 		return '';
 	}
-
-	function webmCheck($filepath) {
-		if(KU_FFMPEGPATH) putenv('PATH=' . getenv('PATH') . PATH_SEPARATOR . KU_FFMPEGPATH);
-		$finfo = shell_exec("ffmpeg -i ".$filepath." 2>&1");
-		preg_match('/Duration: (\d\d\:\d\d\:\d\d\.\d\d)/', $finfo, $duration);
-		preg_match('/(\d+)x(\d+)/', $finfo, $dimensions);
-		$hhmmss = explode(':', $duration[1]);
-		if(count($duration) == 2 && count($dimensions) == 3) return array(
-			'width' => $dimensions[1],
-			'height' => $dimensions[2],
-			'midtime' => gmdate("H:i:s", ($hhmmss[0]*3600 + $hhmmss[1]*60+ round($hhmmss[2]))/2)
-		);
-		else return false;
-	}
-
-	function webmThumb($filepath, $thumbpath, $filename, $midtime) {
-		if(KU_FFMPEGPATH) putenv('PATH=' . getenv('PATH') . PATH_SEPARATOR . KU_FFMPEGPATH);
-		$scale = "w=".KU_THUMBWIDTH.":h=".KU_THUMBHEIGHT;
-		$foar = ':force_original_aspect_ratio=decrease';
-		$rawdur = shell_exec("ffmpeg -i ".$filepath." 2>&1");
-		$common = ' -ss '.$midtime.' -vframes 1 -filter:v scale=';
-		$newfn = $thumbpath.$filename;
-		$result = shell_exec('ffmpeg -i '.$filepath.$common.$scale.$foar.' '.$newfn.'s.jpg 2>&1');
-		preg_match('/Output[\s\S]+?(\d+)x(\d+)[\s\S]+?(\d+)x(\d+)/m', $result, $ths);
-		if(count($ths) == 5) return array(
-			'thumbwidth' => $ths[1], 
-			'thumbheight' => $ths[2], 
-			'catthumbwidth' => $ths[3], 
-			'catthumbheight' => $ths[4]
-		);
-		else return false;
-	}
-
 }
 ?>

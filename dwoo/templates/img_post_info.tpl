@@ -1,4 +1,4 @@
-<a name="{$post.id}"></a>
+<a name="{$post.id}"></a><span class="span_parent_id" style="display:none;">{$post.parentid}</span><span class="span_board_name" style="display:none;">{$board.name}</span>
 <label>
 	<input class="stchkbox" type="checkbox" name="post[]" value="{$post.id}" />
 	<span></span>
@@ -80,18 +80,9 @@
 {/if}
 <span class="extrabtns">
 	{if $post.id != '?????'}
-		{if $is_board_page && $post.parentid eq 0}
-			{if $post.locked eq 1}
-				<img style="border: 0;" src="{$boardpath}css/images/locked.gif" alt="{t}Locked{/t}" />
-			{/if}
-
-			{if $post.stickied eq 1}
-				<img style="border: 0;" src="{$boardpath}css/images/sticky.gif" alt="{t}Stickied{/t}" />
-			{/if}
-		{/if}
 		{if %KU_QUICKREPLY}
 			{strip}
-				<a href="#" data-parent="{if $post.parentid eq 0}{$post.id}{else}{$post.parentid}{/if}" data-forceexternalboard="{if $forceexternalboard}yes{else}no{/if}" data-boardname="{$board.name}" data-maxfilesize="{$board.maximagesize}" data-postnum="{$post.id}" class="qrl" title="{t}Quick Reply{/t}{if not $is_board_page}  в тред {if $post.parentid eq 0}{$post.id}{else}{$post.parentid}{/if}{/if}">
+				<a href="#" data-parent="{if $post.parentid eq 0}{$post.id}{else}{$post.parentid}{/if}" data-forceexternalboard="{if $forceexternalboard}yes{else}no{/if}" data-boardname="{$board.name}" data-maxfilesize="{$board.maximagesize}" data-postnum="{$post.id}" class="qr-btn qrl" title="{t}Quick Reply{/t}{if not $is_board_page}  в тред {if $post.parentid eq 0}{$post.id}{else}{$post.parentid}{/if}{/if}">
 					<img src="{$cwebpath}css/icons/blank.gif" border="0" class="quickreply spritebtn" alt="quickreply">
 				</a>
 				<a href="#" data-parent="{if $post.parentid eq 0}{$post.id}{else}{$post.parentid}{/if}" data-forceexternalboard="{if $forceexternalboard}yes{else}no{/if}" data-boardname="{$board.name}" data-maxfilesize="{$board.maximagesize}" data-postnum="{$post.id}" class="qed" style="margin-left: 4px;" title="Переотправить пост {$post.id}">

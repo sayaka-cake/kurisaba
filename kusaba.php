@@ -7,10 +7,8 @@ if (!isset($_GET['info'])) {
 }
 require 'config.php';
 $menufile = 'menu.php';
-$menusize = (KU_MENUTYPE == 'normal') ? '15%' : '10%';
-$mainsize = 100-$menusize . '%';
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 	<title><?php echo KU_NAME; ?></title>
@@ -24,22 +22,16 @@ $mainsize = 100-$menusize . '%';
 			overflow: auto;
 		}
 		#menu {
-			position: absolute;
-			left: 0px;
-			top: 0px;
 			margin: 0;
 			padding: 0;
 			border: 0px;
 			height: 100%;
-			width: <?php echo $menusize; ?>;
+			width: 100%;
 		}
 		#main {
-			position: absolute;
-			left: <?php echo $menusize; ?>;
-			top: 0px;
 			border: 0px;
 			height: 100%;
-			width: <?php echo $mainsize; ?>;
+			width: 100%;
 		}
 	</style>
 </head>
@@ -70,12 +62,15 @@ if (isset($_GET['info'])) {
 	die();
 }
 ?>
-<body>
+<body style="overflow: hidden;">
+	<table style="width: 100%; height: 100%; border-collapse: collapse;"><tr><td style="width: 15%; min-width: 240px; padding: 0px;">
 	<iframe src="<?php echo $menufile; ?>" name="menu" id="menu">
 		<a href="<?php echo KU_WEBPATH . '/' . $menufile; ?>"><?php echo KU_NAME; ?></a>
 	</iframe>
+	</td><td style="padding: 0px; height: 100%;">
 	<iframe src="/<?php echo KU_DEFAULTBOARD;?>/" name="main" id="main">
 		<a href="<?php echo KU_WEBPATH;?>/<?php echo KU_DEFAULTBOARD;?>/"><?php echo KU_NAME; ?><?php echo KU_DEFAULTBOARD;?></a>
 	</iframe>
+	</td></tr></table>
 </body>
 </html>

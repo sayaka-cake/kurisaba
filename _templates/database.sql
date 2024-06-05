@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS `embeds` (
 ) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
 
 INSERT INTO `embeds` (`id`, `filetype`, `name`, `videourl`, `width`, `height`, `code`) VALUES
-(1, 'you', 'Youtube', 'http://www.youtube.com/watch?v=', 255, 255, '<div class="thumb youtube embed wrapper" style="margin: 0px 20px 0px 0px; background-image:url(https://i.ytimg.com/vi/EMBED_ID/0.jpg)" data-id="EMBED_ID" data-site="youtube" ONCLICK></div>'),
+(1, 'you', 'Youtube', 'http://www.youtube.com/watch?v=', 255, 255, '<div class="thumb youtube embed wrapper" style="margin: 0px 20px 0px 0px; background-image:url(https://i.ytimg.com/vi/EMBED_ID_SHORT/0.jpg)" data-id="EMBED_ID" data-site="youtube" ONCLICK></div>'),
 (2, 'vim', 'Vimeo', 'http://vimeo.com/', 200, 164, '<div class="thumb vimeo embed wrapper" style="margin: 0px;" data-id="EMBED_ID" data-site="vimeo" ONCLICK></div>'),
 (3, 'cob', 'Coub', 'http://coub.com/view/', 200, 164, '<div class="thumb coub embed wrapper" style="margin: 0px;" data-id="EMBED_ID" data-site="coub" ONCLICK></div>');
 
@@ -105,13 +105,16 @@ CREATE TABLE IF NOT EXISTS `filetypes` (
 ) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
 
 INSERT INTO `filetypes` (`id`, `filetype`, `mime`, `image`, `image_w`, `image_h`, `force_thumb`) VALUES
-(1, 'jpg', '', '', 0, 0, 0),
-(2, 'gif', '', '', 0, 0, 0),
-(3, 'png', '', '', 0, 0, 0),
-(4, 'mp3', '', 'mp3.png', 36, 48, 1),
-(5, 'ogg', '', 'ogg.png', 36, 48, 1),
-(7, 'swf', 'application/x-shockwave-flash', 'flash.png', 36, 48, 1),
-(8, 'webm', 'video/webm', 'generic.png', 255, 255, 1);
+(1,  'jpg',  'image/jpeg', '', 0, 0, 0),
+(2,  'gif',  'image/gif', '', 0, 0, 0),
+(3,  'png',  'image/png', '', 0, 0, 0),
+(4,  'mp3',  'audio/mpeg', 'mp3.png', 36, 48, 1),
+(5,  'ogg',  'audio/ogg', 'ogg.png', 36, 48, 1),
+(7,  'swf',  'application/x-shockwave-flash', 'flash.png', 36, 48, 1),
+(8,  'webm', 'video/webm', 'generic.png', 255, 255, 1),
+(9,  'webp', 'image/webp', '', 0, 0, 0),
+(10, 'm4a',  'audio/x-m4a;audio/x-hx-aac-adts', 'm4a.png', 36, 48, 1),
+(11, 'mp4',  'video/mp4', 'generic.png', 255, 255, 1);
 
 CREATE TABLE IF NOT EXISTS `kurisaba_ext_data` (
 `id` int(11) NOT NULL,
@@ -125,7 +128,7 @@ INSERT INTO `kurisaba_ext_data` (`id`, `name`, `value`) VALUES
 (4, 'thread_cirno', '/a/9'),
 (5, 'thread_faq', '/d/1'),
 (6, 'thread_dev', '/d/2'),
-(7, 'special_threads', 'BOARD b\r\nSPECIALTHREAD /b/b/ /b/b/ Random Thread\r\nTHREAD 100 /some/ Some Thread\r\nBOARD d\r\nSPECIALTHREAD /d/ /d/ Development\r\nBOARD a\r\nTHREAD 1 /a/a/ General Anime\r\nSPECIALTHREAD /9/ /9/ Cirno Thread\r\n');
+(7, 'special_threads', 'BOARD b\r\nTHREAD 100 /some/ Some Thread\r\nBOARD d\r\nBOARD a\r\nTHREAD 1 /a/a/ General Anime\r\nHIDDEN 9 /9/ Cirno Thread\r\n');
 
 CREATE TABLE IF NOT EXISTS `loginattempts` (
   `username` varchar(255) NOT NULL,
@@ -171,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `posts` (
   `thumb_h` smallint(5) unsigned NOT NULL DEFAULT '0',
   `ip` varchar(75) COLLATE utf8mb4_unicode_ci NOT NULL,
   `ipmd5` char(32) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tag` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tag` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `timestamp` int(20) unsigned NOT NULL,
   `stickied` tinyint(1) NOT NULL DEFAULT '0',
   `locked` tinyint(1) NOT NULL DEFAULT '0',

@@ -8,6 +8,7 @@ function md5_image($file)
 	$img_tmp = false;
 	if      ($imageDim[2] == IMAGETYPE_JPEG) $img_tmp = imagecreatefromjpeg($file);
 	else if ($imageDim[2] == IMAGETYPE_PNG)  $img_tmp = imagecreatefrompng($file);
+	else if ($imageDim[2] == IMAGETYPE_WEBP) $img_tmp = imagecreatefromwebp($file);
 	else if ($imageDim[2] == IMAGETYPE_GIF)  $img_tmp = imagecreatefromgif($file);
 	if ($img_tmp !== false)
 	{
@@ -68,8 +69,13 @@ function mime_to_extension($mime_type)
 	(
 		'image/gif'  => '.gif',
 		'image/jpeg' => '.jpg',
+		'image/webp' => '.webp',
 		'image/png'  => '.png',
-		'video/webm' => '.webm'
+		'audio/mp3'  => '.mp3',
+		'audio/x-m4a'  => '.m4a',
+		'audio/ogg'  => '.ogg',
+		'video/webm' => '.webm',
+		'video/mp4'  => '.mp4'
 	);
 	if (array_key_exists($mime_type, $mime_types))
 	{
@@ -161,7 +167,6 @@ function AnswerMapAdd($ans_req, $boardids)
 		for ($i = 0; $i < count($arr[0]); $i++)
 		{
 			$answer_boardname = $arr[1][$i];
-			if ($answer_boardname == 'b') $answer_boardname = 'sg'; // Claire hack; only has meaning for kurisach.
 			$answer_parentid  = $arr[2][$i];
 			$answer_id        = $arr[3][$i];
 			$answer_boardid   = $boardids[$answer_boardname];
@@ -231,7 +236,7 @@ function do_redirect($url, $ispost = false, $file = '') {
 	$headermethod = true;
 
 	if ($headermethod) {
-		setcookie('tothread', $gtt, 0, '/', KU_DOMAIN);
+		/* setcookie_strict('tothread', $gtt, 0, '/', KU_DOMAIN); - Was this even working at all? */
 		if ($ispost) {
 			header('Location: ' . $url);
 		} else {

@@ -7,6 +7,7 @@
 		var ku_boardspath = '{%KU_BOARDSPATH}';
 		var ku_boardsdir = '{%KU_BOARDSDIR}';
 		var ku_cgipath = '{%KU_CGIPATH}';
+		var ku_defaultboard = '{%KU_DEFAULTBOARD}';
 		var ku_maxfilesize = {$maxfilesize};
 		var style_cookie = "kustyle";
 		var locale = '{$locale}';
@@ -21,9 +22,9 @@
 <link rel="canonical" href="{%KU_WEBPATH}/{$board.name}/res/{$replythread}.html" />
 {/if}
 <!-- <link href='https://fonts.googleapis.com/css?family=Roboto:400,700,400italic,700italic&subset=latin,cyrillic' rel='stylesheet' type='text/css'> -->
-<link rel="stylesheet" type="text/css" href="{$cwebpath}css/img_global.css?v={%KU_CSSVER}" />
+<link rel="stylesheet" type="text/css" href="{%KU_WEBPATH}/css/img_global.css?v={%KU_CSSVER}" />
 {loop $ku_styles}
-	<link rel="{if $ neq $__.ku_defaultstyle}alternate {/if}stylesheet" type="text/css" href="{$__.cwebpath}css/styles/{$}.css?v={%KU_CSSVER}" title="{$|capitalize}" />
+	<link rel="{if $ neq $__.ku_defaultstyle}alternate {/if}stylesheet" type="text/css" href="{%KU_WEBPATH}/css/styles/{$}.css?v={%KU_CSSVER}" title="{$|capitalize}" />
 {/loop}
 <link href="{$cwebpath}css/prettify.css" type="text/css" rel="stylesheet" />
 {if $locale eq 'ja'}
@@ -41,24 +42,24 @@
 <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/headjs/1.0.3/head.load.min.js"></script> -->
 <script>
 if (!window.head) {
-	document.write('<script src="{$cwebpath}lib/javascript/head.load.min.js"><\/script>');
+	document.write('<script src="/lib/javascript/head.load.min.js"><\/script>');
 }
 </script>
 <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script> -->
 <script>
 if (!window.jQuery) {
-	document.write('<script src="{$cwebpath}lib/javascript/jquery-1.11.1.min.js"><\/script>');
+	document.write('<script src="/lib/javascript/jquery-1.11.1.min.js"><\/script>');
 }
 </script>
 <!-- <script src="//cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.js"></script> -->
 <script>
 if (!window.prettyPrint) {
-	document.write('<script src="{$cwebpath}lib/javascript/prettify/prettify.js"><\/script>');
+	document.write('<script src="/lib/javascript/prettify/prettify.js"><\/script>');
 }
 </script>
 <!-- <script src="{%KU_WEBPATH}/lib/javascript/kusaba.new.js?v={%KU_JSVER}"></script> -->
 <script>
-	document.write('<script src="{$cwebpath}lib/javascript/kusaba.new.js?v={%KU_JSVER}"><\/script>');
+	document.write('<script src="/lib/javascript/kusaba.new.js?v={%KU_JSVER}"><\/script>');
 </script>
 {if %KU_REACT_ENA}
 <script src="{%KU_CLI_REACT_API}/socket.io/socket.io.js"></script>
@@ -174,10 +175,13 @@ function scrolling(elem, direction) {
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 		
 		<span class="olm-link">[<a target="_top" href="{%KU_BOARDSFOLDER}">Главная</a>]</span>
-		[<a href="{%KU_WEBPATH}/kusaba.php" target="_top">{t}Фрейм{/t}</a>]
+		{if %KU_MAINPAGE ne 'kusaba.php'}
+			[<a href="{%KU_WEBPATH}/kusaba.php" target="_top">{t}Фрейм{/t}</a>]
+		{/if}
 		[<a href="{%KU_WEBPATH}/single.php">Однопоток</a>]
-		[<a href="{%KU_WEBPATH}/faq/">FAQ</a>]
-
+		{if $faq_enabled}
+			[<a href="{%KU_WEBPATH}/faq/">FAQ</a>]
+		{/if}
 		<span class="mobile-nav-disabled" id="mn-normalboards" style="display:none"> 
 			<select onchange="javascript:if(selectedIndex != 0) location.href='{%KU_WEBPATH}/' + this.options[this.selectedIndex].value;">
 				<option><strong>{t}Boards{/t}</strong></option>
@@ -224,8 +228,8 @@ function scrolling(elem, direction) {
 		<div class="menu-sect" id="ms-_search">
 			<table><tr><td>Перейти к посту:</td><td>
 				<form style="display: inline;" action="/read.php" method="get">
-					<input size="3" name="b" value="sg" type="text">
-					<input size="7" name="p" value="206" type="text" class="defaultfield" id="searchposttop" onfocus="check_field('searchposttop',true);" onblur="check_field('searchposttop',false);">
+					<input size="3" name="b" value="{%KU_SEARCH_BOARD}" type="text">
+					<input size="7" name="p" value="{%KU_SEARCH_THREAD}" type="text" class="defaultfield" id="searchposttop" onfocus="check_field('searchposttop',true);" onblur="check_field('searchposttop',false);">
 					<input value="Перейти" type="submit">
 					<input name="t" value="0" type="hidden">
 					<input name="issearch" value="true" type="hidden">
@@ -233,7 +237,7 @@ function scrolling(elem, direction) {
 			</td></tr>
 			<tr><td>Поиск по тексту поста:</td><td>
 				<form style="display: inline;" method="get" action="/read.php">
-					<input size="3" name="b" value="sg" type="text">
+					<input size="3" name="b" value="{%KU_SEARCH_BOARD}" type="text">
 					<input size="25" name="v" value="{$search_phrase}" type="text" class="defaultfield" id="searchtexttop" onfocus="check_field('searchtexttop',true);" onblur="check_field('searchtexttop',false);">
 					<input value="Искать" type="submit">
 				</form>
@@ -241,6 +245,9 @@ function scrolling(elem, direction) {
 		</div>
 	</div>
 </div>
+{if $isfeed eq '1'}
+<script>var isfeed = true;</script>
+{/if}
 
 <table width="98%" border="0" align="center" cellpadding="0" cellspacing="0" class="maintable">
 	<tbody>
@@ -250,15 +257,15 @@ function scrolling(elem, direction) {
 				<span class="oldsearch" style="float: right;">
 					Перейти:
 					<form style="display: inline;" action="/read.php" method="get">
-						<input size="3" name="b" value="sg" type="text">
-						<input size="7" name="p" value="206" type="text" class="defaultfield" id="searchpostmain" onfocus="check_field('searchpostmain',true);" onblur="check_field('searchpostmain',false);">
+						<input size="3" name="b" value="{%KU_SEARCH_BOARD}" type="text">
+						<input size="7" name="p" value="{%KU_SEARCH_THREAD}" type="text" class="defaultfield" id="searchpostmain" onfocus="check_field('searchpostmain',true);" onblur="check_field('searchpostmain',false);">
 						<input value="Перейти" type="submit">
 						<input name="t" value="0" type="hidden">
 						<input name="issearch" value="true" type="hidden">
 					</form>
 					Поиск:
 					<form style="display: inline;" method="get" action="/read.php">
-						<input size="3" name="b" value="sg" type="text">
+						<input size="3" name="b" value="{%KU_SEARCH_BOARD}" type="text">
 						<input size="25" name="v" value="{$search_phrase}" type="text" class="defaultfield" id="searchtextmain" onfocus="check_field('searchtextmain',true);" onblur="check_field('searchtextmain',false);">
 						<input value="Искать" type="submit">
 					</form>

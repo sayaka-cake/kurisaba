@@ -30,7 +30,7 @@
  * @package kusaba
  */
 
-session_start();
+session_start(['cookie_samesite' => 'Strict']);
 require 'config.php';
 require KU_ROOTDIR . 'inc/functions.php';
 require KU_ROOTDIR . 'inc/classes/board-post.class.php';
@@ -388,7 +388,7 @@ if($operation_post) // it's `noreturn`.
 		}
 
 		if (isset($_POST['rememberformatting'])) {
-			setcookie('kuformatting', urldecode($_POST['formatting']), time() + KU_ADDTIME + (365 * 24 * 3600), '/', KU_DOMAIN);
+			setcookie_strict('kuformatting', urldecode($_POST['formatting']), time() + KU_ADDTIME + (365 * 24 * 3600), '/', KU_DOMAIN);
 		}
 	}
 
@@ -588,8 +588,8 @@ if($operation_post) // it's `noreturn`.
 			$post['subject'] = mb_substr($post_subject, 0, KU_MAXSUBJLENGTH);
 			$post['message'] = $post_message;
 			$post['message_source'] = $_POST['message'];
-			$post['pic_spoiler'] = $_POST['picspoiler'];
-			$post['pic_animated'] = $upload_class->animated;
+			$post['pic_spoiler'] = intval($_POST['picspoiler']);
+			$post['pic_animated'] = intval($upload_class->animated);
 
 			$post = hook_process('posting', $post);
 
@@ -630,7 +630,7 @@ if($operation_post) // it's `noreturn`.
 				$post['password'] = $post_passwordmd5;
 				$post['timestamp'] = time() + KU_ADDTIME;
 				$post['bumped'] = time() + KU_ADDTIME;
-				$post['ip'] = md5_encrypt(KU_REMOTE_ADDR, KU_RANDOMSEED);
+				$post['ip'] = md5_encrypt(KU_SAVEIP ? KU_REMOTE_ADDR : '0.0.0.0', KU_RANDOMSEED);
 				$post['ipmd5'] = md5(KU_REMOTE_ADDR);
 				$post['posterauthority'] = $user_authority_display;
 				$post['stickied'] = $sticky;
@@ -667,8 +667,45 @@ if($operation_post) // it's `noreturn`.
 				$board_class->PrintPage('', $page, true);
 				die;
 			}
-			
-			$post_id = $post_class->Insert($thread_replyto, $post['name'], $post['tripcode'], $post['email'], $post['subject'], addslashes($post['message']), $post['message_source'], $upload_class->file_name, $upload_class->original_file_name, $filetype_withoutdot, $upload_class->file_md5, $upload_class->image_md5, $upload_class->imgWidth, $upload_class->imgHeight, $upload_class->file_size, $upload_class->imgWidth_thumb, $upload_class->imgHeight_thumb, $post_passwordmd5, time() + KU_ADDTIME, time() + KU_ADDTIME, KU_REMOTE_ADDR, $user_authority_display, $sticky, $lock, $board_class->board['id'], $post['country'], $post['pic_spoiler'], $post['pic_animated']);
+
+			// Fromatting of topic subject
+			$patterns = array(
+				'`\(c\)`',
+				'`\(C\)`',
+				'`\(с\)`',
+				'`\(С\)`',
+				'`\(tm\)`',
+				'`\(тм\)`',
+				'`-&gt;`',
+				'`&lt;-`',
+				'`- `',
+				'`\*(.+?)\*`is',
+				'`%%(.+?)%%`is',
+				'`~~(.+?)~~`is',
+				'`&quot;(.+?)&quot;`is'
+			);
+			$replaces =  array(
+				'&copy;',
+				'&copy;',
+				'&copy;',
+				'&copy;',
+				'&trade;',
+				'&trade;',
+				'&rarr;',
+				'&larr;',
+				'&mdash; ',
+				'<i>\\1</i>',
+				'<span class="spoiler">\\1</span>',
+				'<strike>\\1</strike>',
+				'«\\1»'
+			);
+			$post['subject'] = preg_replace($patterns, $replaces, $post['subject']);
+
+			$post_id = $post_class->Insert($thread_replyto, $post['name'], $post['tripcode'], $post['email'], $post['subject'], addslashes($post['message']), $post['message_source'], $upload_class->file_name, $upload_class->original_file_name, $filetype_withoutdot, $upload_class->file_md5, $upload_class->image_md5, $upload_class->imgWidth, $upload_class->imgHeight, $upload_class->file_size, $upload_class->imgWidth_thumb, $upload_class->imgHeight_thumb, $post_passwordmd5, time() + KU_ADDTIME, time() + KU_ADDTIME, KU_SAVEIP ? KU_REMOTE_ADDR : '0.0.0.0', $user_authority_display, $sticky, $lock, $board_class->board['id'], $post['country'], $post['pic_spoiler'], $post['pic_animated']);
+			if (!$post_id)
+			{
+				kurisaba_exit('Не получилось добавить пост в базу.');
+			}
 			if ($post_id == -1)
 			{
 				// Don't leave orphan files
@@ -691,14 +728,14 @@ if($operation_post) // it's `noreturn`.
 			}
 
 			if ($post['name_save'] && isset($_POST['name'])) {
-				setcookie('name', urldecode($_POST['name']), time() + KU_ADDTIME + (365 * 24 * 3600), '/', KU_DOMAIN);
+				setcookie_strict('name', urldecode($_POST['name']), time() + KU_ADDTIME + (365 * 24 * 3600), '/', KU_DOMAIN);
 			}
 
 			if ($post['email_save']) {
-				setcookie('email', urldecode($post['email']), time() + KU_ADDTIME + (365 * 24 * 3600), '/', KU_DOMAIN);
+				setcookie_strict('email', urldecode($post['email']), time() + KU_ADDTIME + (365 * 24 * 3600), '/', KU_DOMAIN);
 			}
 
-			setcookie('postpassword', urldecode($_POST['postpassword']), time() + KU_ADDTIME + (365 * 24 * 3600), '/');
+			setcookie_strict('postpassword', urldecode($_POST['postpassword']), time() + KU_ADDTIME + (365 * 24 * 3600), '/');
 		} else {
 			kurisaba_exit(_gettext('Could not copy uploaded image.'),'',$_POST['message']);
 		}
@@ -727,14 +764,14 @@ if($operation_post) // it's `noreturn`.
 	}
 
 	if( $_POST['redirecttothread'] == 1 || $_POST['em'] == 'return' || $_POST['em'] == 'noko') {
-		setcookie('tothread', 'on', time() + KU_ADDTIME + (365 * 24 * 3600), '/');
+		setcookie_strict('tothread', 'on', time() + KU_ADDTIME + (365 * 24 * 3600), '/');
 		$tothread_num = $thread_replyto;
 		if ($tothread_num == "0") $tothread_num = $post_id;
 		if (isset($_POST['plus50'])) $tothread_num .= '+50';
 		if (isset($_POST['minus100'])) $tothread_num .= '-100';
 		kurisaba_redirect(KU_BOARDSPATH . '/' . $board_class->board['name'] . '/res/' . $tothread_num . '.html#boardlist_footer', true, $imagefile_name, $post_id);
 	} else {
-		setcookie('tothread', 'off', time() + KU_ADDTIME + (365 * 24 * 3600), '/');
+		setcookie_strict('tothread', 'off', time() + KU_ADDTIME + (365 * 24 * 3600), '/');
 		kurisaba_redirect(KU_BOARDSPATH . '/' . $board_class->board['name'] . '/', true, $imagefile_name, $post_id);
 	}
 }

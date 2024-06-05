@@ -280,14 +280,14 @@ class Board {
 					}
 					else
 					{
-						if ($line['file_type'] == 'jpg' || $line['file_type'] == 'png' || $line['file_type'] == 'gif')
+						if ($line['file_type'] == 'jpg' || $line['file_type'] == 'png' || $line['file_type'] == 'webp' || $line['file_type'] == 'gif')
 						{
 							$catalog_page .= '<img src="' . KU_BOARDSFOLDER . $this->board['name'] . '/thumb/' . $line['file'] . 's.' . $line['file_type'] . '" class="raw-thumb" alt="' . $line['id'] . '" border="0" /></a><br />';
 						}
-						else if ($line['file_type'] == 'webm')
+						else if ($line['file_type'] == 'webm' || $line['file_type'] == 'mp4')
 						{
 							$catalog_page .= '<video preload="metadata" controls="" class="raw-thumb" width="368">';
-							$catalog_page .= '<source src="' . KU_BOARDSFOLDER . $this->board['name'] . '/src/' . $line['file'] . '.' . $line['file_type'] . "\" type='video/webm; codecs=\"vp8.0, vorbis\"'>";
+							$catalog_page .= '<source src="' . KU_BOARDSFOLDER . $this->board['name'] . '/src/' . $line['file'] . '.' . $line['file_type'] . "\" type='video/" . $line['file_type'] . "'>";
 							$catalog_page .= '</video></a><br />';
 						}
 						else
@@ -346,7 +346,7 @@ class Board {
 		{ 
 			foreach ($thread as $key=>$post)
 			{
-				if (($post['file_type'] == 'jpg' || $post['file_type'] == 'gif' || $post['file_type'] == 'png') && $post['parentid'] != 0)
+				if (($post['file_type'] == 'jpg' || $post['file_type'] == 'gif' || $post['file_type'] == 'webp' || $post['file_type'] == 'png') && $post['parentid'] != 0)
 				{
 					$numimages++;
 				}
@@ -452,7 +452,7 @@ class Board {
 		return str_replace('</a>', '<span class="youindicator"> (You)</span></a>', $matches[0]);
 	}
 	
-	function BuildPost($post, $page, $pregen_replies_q = false, $temporary = false) {
+	function BuildPost($post, $page, $pregen_replies_q = false, $temporary = false, $single = false) {
 		global $tc_db, $CURRENTLOCALE;
 
 		$post['board'] = $this->board;
@@ -494,11 +494,11 @@ class Board {
 			$post['message'] = stripslashes($post['message']);
 		}
 		$post['timestamp_formatted'] = formatDate($post['timestamp'], 'post', $CURRENTLOCALE, $dateEmail);
-		$post['reflink'] = formatReflink($this->board['name'], (($post['parentid'] == 0) ? ($post['id']) : ($post['parentid'])), $post['id'], $CURRENTLOCALE);
+		$post['reflink'] = formatReflink($this->board['name'], (($post['parentid'] == 0) ? ($post['id']) : ($post['parentid'])), $post['id'], $CURRENTLOCALE, $single);
 		if (isset($this->board['filetypes']) && in_array($post['file_type'], $this->board['filetypes'])) {
 			$post['videobox'] = embeddedVideoBox($post);
 		}
-		if ($post['file_type'] == 'mp3') {
+		if ($post['file_type'] == 'mp3' || $post['file_type'] == 'ogg' || $post['file_type'] == 'mp4' || $post['file_type'] == 'webm' || $post['file_type'] == 'm4a') {
 			//Grab the ID3 info.
 			// include getID3() library
 
@@ -508,10 +508,10 @@ class Board {
 			$getID3 = new getID3;
 			$getID3->encoding_id3v1 = KU_ID3_ENCODING;
 
-			$post['id3'] = $getID3->analyze(KU_BOARDSDIR.$this->board['name'].'/' . $srcdir . '/'.$post['file'].'.mp3');
+			$post['id3'] = $getID3->analyze(KU_BOARDSDIR.$this->board['name'].'/' . $srcdir . '/' . $post['file'] . '.' . $post['file_type']);
 			getid3_lib::CopyTagsToComments($post['id3']);
 		}
-		if ($post['file_type']!='jpg'&&$post['file_type']!='gif'&&$post['file_type']!='png'&&$post['file_type']!=''&&!in_array($post['file_type'], $this->board['filetypes'])) {
+		if ($post['file_type']!='jpg'&&$post['file_type']!='gif'&&$post['file_type']!='webp'&&$post['file_type']!='png'&&$post['file_type']!=''&&!in_array($post['file_type'], $this->board['filetypes'])) {
 			if(!isset($filetype_info[$post['file_type']])) $filetype_info[$post['file_type']] = getfiletypeinfo($post['file_type']);
 			$post['nonstandard_file'] = KU_WEBPATH . '/inc/filetypes/' . $filetype_info[$post['file_type']][0];
 			if($post['thumb_w']!=0&&$post['thumb_h']!=0)
@@ -520,6 +520,8 @@ class Board {
 					$post['nonstandard_file'] = KU_WEBPATH . '/' .$this->board['name'].'/' . $thumbdir . '/'.$post['file'].'s.jpg';
 				elseif(file_exists(KU_BOARDSDIR.$this->board['name'].'/' . $thumbdir . '/'.$post['file'].'s.png'))
 					$post['nonstandard_file'] = KU_WEBPATH . '/' .$this->board['name'].'/' . $thumbdir . '/'.$post['file'].'s.png';
+				elseif(file_exists(KU_BOARDSDIR.$this->board['name'].'/' . $thumbdir . '/'.$post['file'].'s.webp'))
+					$post['nonstandard_file'] = KU_WEBPATH . '/' .$this->board['name'].'/' . $thumbdir . '/'.$post['file'].'s.webp';
 				elseif(file_exists(KU_BOARDSDIR.$this->board['name'].'/' . $thumbdir . '/'.$post['file'].'s.gif'))
 					$post['nonstandard_file'] = KU_WEBPATH . '/' .$this->board['name'].'/' . $thumbdir . '/'.$post['file'].'s.gif';
 				else {
@@ -536,7 +538,7 @@ class Board {
 		if ($_COOKIE["nodolls"] === "1")
 			$post['nodolls'] = 1;
 
-		if($post['pic_spoiler']&&($post['file_type']=='jpg'||$post['file_type']=='gif'||$post['file_type']=='png'))
+		if($post['pic_spoiler']&&($post['file_type']=='jpg'||$post['file_type']=='gif'||$post['file_type']=='webp'||$post['file_type']=='png'))
 		{
 			$post['nonstandard_file'] = KU_WEBPATH . '/images/spoiler.'.$post['file_type'];
 			$post['thumb_w'] = 200;
@@ -622,6 +624,25 @@ class Board {
 	function PageHeader($replythread = '0', $liststart = '0', $liststooutput = '-1', $overridetitle = '') {
 		global $tc_db, $CURRENTLOCALE;
 
+		$faq_enabled = false;
+		$special_threads = $tc_db->GetOne("SELECT `value` FROM `" . KU_DBPREFIX . "kurisaba_ext_data` WHERE `name` = 'special_threads'");
+		$special_threads = preg_replace('/ +/', ' ', $special_threads);
+		$special_threads = explode("\n", $special_threads);
+		$current_board='';
+		foreach ($special_threads as $special_thread)
+		{
+			$special_thread = explode(' ', trim($special_thread), 4);
+			if($special_thread[0] == 'BOARD')
+			{
+				$current_board=$special_thread[1];
+			}
+			else if($special_thread[0] == 'THREAD' || $special_thread[0] == 'HIDDEN')
+			{
+				if($special_thread[2] == '/faq/') $faq_enabled = true;
+			}
+		}
+
+
 		$tpl = Array();
 
 		$tpl['htmloptions'] = ((KU_LOCALE == 'he' && empty($this->board['locale'])) || $this->board['locale'] == 'he') ? ' dir="rtl"' : '' ;
@@ -673,10 +694,11 @@ class Board {
 		$this->dwoo_data->assign('ad_right', $ad_right);
 		$this->dwoo_data->assign('board', $this->board);
 		$this->dwoo_data->assign('replythread', $replythread);
+		$this->dwoo_data->assign('faq_enabled', $faq_enabled);
 		if ($this->board['type'] != 1) {
 			$styles =  explode(':', KU_STYLES);
 			$defaultstyle = $this->board['defaultstyle'];
-			if(empty($defaultstyle)) $defaultstyle = KU_ACTIVESTYLE;
+			if(empty($defaultstyle)) $defaultstyle = KU_DEFAULTSTYLE;
 			$this->dwoo_data->assign('ku_styles', $styles);
 			$this->dwoo_data->assign('ku_defaultstyle', $defaultstyle);
 		} else {
@@ -780,7 +802,7 @@ class Board {
 		$postbox = '';
 
 		if ($this->board['type'] == 2 && $replythread > 0) {
-			$oekposts = $tc_db->GetAll("SELECT `id` FROM `" . KU_DBPREFIX."posts` WHERE `boardid` = " . $this->board['id']." AND (`id` = ".$replythread." OR `parentid` = ".$replythread.") AND `file` != '' AND `file` != 'removed' AND `file_type` IN ('jpg', 'gif', 'png') AND `IS_DELETED` = 0 ORDER BY `parentid` ASC, `timestamp` ASC");
+			$oekposts = $tc_db->GetAll("SELECT `id` FROM `" . KU_DBPREFIX."posts` WHERE `boardid` = " . $this->board['id']." AND (`id` = ".$replythread." OR `parentid` = ".$replythread.") AND `file` != '' AND `file` != 'removed' AND `file_type` IN ('jpg', 'gif', 'png', 'webp') AND `IS_DELETED` = 0 ORDER BY `parentid` ASC, `timestamp` ASC");
 			$this->dwoo_data->assign('oekposts', $oekposts);
 		}
 		
@@ -940,6 +962,18 @@ class Post extends Board {
 		{
 			$this->DeleteFile(false, false, $save_picture);
 			$tc_db->Execute("UPDATE `".KU_DBPREFIX."posts` SET `IS_DELETED` = 1 , `deleted_timestamp` = '" . (time() + KU_ADDTIME) . "' WHERE `boardid` = '" . $this->board['id'] . "' AND `id` = ".$tc_db->qstr($this->post['id']));
+
+			// Unbump thread after deletion
+			$results = $tc_db->GetAll("SELECT * FROM `" . KU_DBPREFIX . "posts` WHERE `boardid` = " . $this->board['id'] . " AND `parentid` = " . $tc_db->qstr($this->post['parentid']) . " AND `IS_DELETED` = 0 ORDER BY `stickied` DESC, `bumped` DESC LIMIT 1");
+			if(count($results) == 0)
+			{
+				$results = $tc_db->GetAll("SELECT * FROM `" . KU_DBPREFIX . "posts` WHERE `boardid` = " . $this->board['id'] . " AND `id` = " . $tc_db->qstr($this->post['parentid']) . " AND `IS_DELETED` = 0 ORDER BY `stickied` DESC, `bumped` DESC LIMIT 1");
+			}
+			foreach($results AS $line)
+			{
+				$tc_db->Execute("UPDATE `".KU_DBPREFIX."posts` SET `bumped` = '" . $line['timestamp'] . "' WHERE `boardid` = '" . $this->board['id'] . "' AND `id` = ". $tc_db->qstr($this->post['parentid']));
+			}
+
 			clearPostCache($this->post['id'], $this->board['name']);
 			AnswerMapDelete($this->post['id'], $this->board['id']);
 			return true;
@@ -963,9 +997,10 @@ class Post extends Board {
 						@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$line['file'].'s.'.$line['file_type']);
 						@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$line['file'].'a.'.$line['file_type']);
 						@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$line['file'].'c.'.$line['file_type']);
-						if ($line['file_type'] == 'mp3')
+						if ($line['file_type'] == 'mp3' || $line['file_type'] == 'ogg' || $line['file_type'] == 'm4a')
 						{
 							@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$line['file'].'s.jpg');
+							@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$line['file'].'s.webp');
 							@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$line['file'].'s.png');
 							@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$line['file'].'s.gif');
 						}
@@ -991,9 +1026,10 @@ class Post extends Board {
 				@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$this->post['file'].'s.'.$this->post['file_type']);
 				@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$this->post['file'].'a.'.$this->post['file_type']);
 				@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$this->post['file'].'c.'.$this->post['file_type']);
-				if ($this->post['file_type'] == 'mp3')
+				if ($this->post['file_type'] == 'mp3' || $this->post['file_type'] == 'ogg' || $this->post['file_type'] == 'm4a')
 				{
 					@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$this->post['file'].'s.jpg');
+					@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$this->post['file'].'s.webp');
 					@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$this->post['file'].'s.png');
 					@unlink(KU_BOARDSDIR.$this->board['name'].'/thumb/'.$this->post['file'].'s.gif');
 

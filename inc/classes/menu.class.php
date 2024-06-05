@@ -27,6 +27,8 @@ class Menu {
 
 		require_once KU_ROOTDIR.'lib/dwoo.php';
 		
+		$faq_enabled = false;
+		
 		$dwoo_data->assign('boardpath', KU_BOARDSPATH . '/');
 
 		$special_threads = $tc_db->GetOne("SELECT `value` FROM `" . KU_DBPREFIX . "kurisaba_ext_data` WHERE `name` = 'special_threads'");
@@ -42,17 +44,18 @@ class Menu {
 				$special_threads_html .= '<li><strong>/'.$special_thread[1].'/:</strong></li>';
 				$current_board=$special_thread[1];
 			}
-			else if($special_thread[0] == 'THREAD')
+			else if($special_thread[0] == 'THREAD' || $special_thread[0] == 'HIDDEN')
 			{
-				$special_threads_html .= '<li><a href="/'.$current_board.'/res/'.$special_thread[1].'.html" class="boardlink">'.$special_thread[2].' - '.$special_thread[3].'</a></li>';
-			}
-			else if($special_thread[0] == 'SPECIALTHREAD')
-			{
-				$special_threads_html .= '<li><a href="'.$special_thread[1].'" class="boardlink">'.$special_thread[2].' - '.$special_thread[3].'</a></li>';
+				if($special_thread[0] == 'THREAD')
+				{
+					$special_threads_html .= '<li><a href="/'.$current_board.'/res/'.$special_thread[1].'.html" class="boardlink">'.$special_thread[2].' - '.$special_thread[3].'</a></li>';
+				}
+				if($special_thread[2] == '/faq/') $faq_enabled = true;
 			}
 		}
 		
 		$dwoo_data->assign('special_threads', $special_threads_html);
+		$dwoo_data->assign('faq_enabled', $faq_enabled);
 		
 		if (KU_MENUTYPE == 'normal') {
 			$dwoo_data->assign('styles', explode(':', KU_STYLES));

@@ -26,6 +26,7 @@ $noboardlist = false;
 $hide_extra = false;
 $replies = false;
 $board_class->InitializeDwoo();
+$board_class->dwoo_data->assign('isfeed', true);
 $board_class->dwoo_data->assign('issearch', true);
 $board_class->dwoo_data->assign('isread', true);
 $board_class->dwoo_data->assign('skipheader', true);
@@ -38,7 +39,7 @@ $page .= "<hr>";
 $board_class->dwoo_data->assign('onlyclone', true);
 $page .= $board_class->Postbox();
 
-$results = $tc_db->GetAll("SELECT A.*, B.subject AS parent_subject FROM (SELECT * FROM `" . KU_DBPREFIX . "posts` WHERE `IS_DELETED` = 0 ORDER BY `timestamp` DESC LIMIT " . KU_FEEDLENGTH . ") as A LEFT JOIN `" . KU_DBPREFIX . "posts` AS B ON B.id = A.parentid AND A.parentid != 0 AND B.boardid = A.boardid");
+$results = $tc_db->GetAll("SELECT A.*, B.subject AS parent_subject FROM (SELECT * FROM `" . KU_DBPREFIX . "posts` WHERE `IS_DELETED` = 0 ORDER BY `timestamp` DESC LIMIT " . KU_FEEDLENGTH . ") as A LEFT JOIN `" . KU_DBPREFIX . "posts` AS B ON B.id = A.parentid AND A.parentid != 0 AND B.boardid = A.boardid ORDER BY A.`timestamp` DESC");
 
 if (count($results) == 0) { exitWithErrorPage('Постов в базе нет!'); }
 
@@ -52,12 +53,13 @@ foreach ($results as $key=>$post)
 	$post['file_path'] = KU_BOARDSPATH . '/' . $post_board_class->board['name'];
 	$thread = ($post['parentid'] == 0) ? $post['id'] : $post['parentid'];
 	$extname = '/'.$post_board_class->board['name'].'/'.$thread;
-	if ($post['parent_subject'] !== null)
+	if($post['parentid'] == 0 && $post['subject'] != "") $extname = $post['subject'];
+	elseif ($post['parent_subject'] !== null)
 		if ($post['parent_subject'] != "")
 			$extname = $post['parent_subject'];
-	$post['externalreference'] = '['. $extname .']';
+	$post['externalreference'] = '[<a href="' . $post['file_path'] . '/res/' . $thread . '.html#' . $post['id'] . '">'. $extname .'</a>]';
 
-	$results[$key] = $post_board_class->BuildPost($post, false);
+	$results[$key] = $post_board_class->BuildPost($post, false, false, false, true);
 }
 
 $board_class->dwoo_data->assign('posts', $results);

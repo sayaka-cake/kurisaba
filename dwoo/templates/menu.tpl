@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <script> var is_menu_frame = true; </script><script> var search_phrases = Array('{$search_phrases}'); </script>
@@ -6,10 +6,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>{%KU_NAME} Navigation</title>
 {if %KU_MENUTYPE eq 'normal'}
-	<link rel="stylesheet" type="text/css" href="{$boardpath}css/menu_global.css?v={%KU_CSSVER}" />
-	{loop $styles}
-		<link rel="{if $ neq %KU_ACTIVESTYLE}alternate {/if}stylesheet" type="text/css" href="{%KU_WEBFOLDER}css/styles/menu_{$}.css?v={%KU_CSSVER}" title="{$|capitalize}" />
-	{/loop}
+  <link rel="stylesheet" type="text/css" href="{%KU_WEBPATH}/css/menu_global.css?v={%KU_CSSVER}" />
+  {loop $styles}
+    <link rel="{if $ neq %KU_DEFAULTSTYLE}alternate {/if}stylesheet" type="text/css" href="{%KU_WEBPATH}/css/styles/menu_{$}.css?v={%KU_CSSVER}" title="{$|capitalize}" />
+  {/loop}
 {else}
 	{literal}<style type="text/css">body { margin: 0px; } h1 { font-size: 1.25em; } h2 { font-size: 0.8em; font-weight: bold; color: #CC3300; } ul { list-style-type: none; padding: 0px; margin: 0px; } li { font-size: 0.8em; padding: 0px; margin: 0px; }</style>{/literal}
 {/if}
@@ -17,12 +17,16 @@
 <script type="text/javascript">
 	var style_cookie = "kustyle";
 	var ku_boardspath = '{%KU_BOARDSPATH}';
+	var ku_defaultboard = '{%KU_DEFAULTBOARD}';
 </script>
 <link rel="shortcut icon" href="{%KU_WEBFOLDER}favicon.ico" />
 <script type="text/javascript" src="{%KU_WEBFOLDER}lib/javascript/gettext.js"></script>
 <!-- <script type="text/javascript" src="{%KU_WEBFOLDER}lib/javascript/menu.js"></script> -->
 <script src="{%KU_WEBFOLDER}lib/javascript/jquery-1.11.1.min.js"></script>
 <script type="text/javascript" src="{%KU_WEBFOLDER}lib/javascript/kusaba.new.js?v={%KU_JSVER}"></script>
+<script type="text/javascript"><!--
+var _SITENAME = '{%KU_NAME}';
+//--></script>
 	<script src="lib/javascript/frame.js?v={%KU_JSVER}"></script>
 <script type="text/javascript"><!--
 var ku_boardspath = '{%KU_BOARDSPATH}';
@@ -115,9 +119,12 @@ function iter_obj(object, callback) {
 //--></script>
 <base target="main" />
 </head>
-<body style="overflow: auto;">
+<body style="overflow: auto; padding: 8px; margin: 0px; width: unset;">
 <h1><a href="{%KU_WEBFOLDER}" target="_top" title="{t}Front Page{/t}">{%KU_NAME}</a></h1>
-<ul>	<li><a href="/faq/" class="boardlink">[ FAQ ]</a></li>
+<ul>
+{if $faq_enabled}
+    <li><a href="/faq/" class="boardlink">[ FAQ ]</a></li>
+{/if}
 {if $showdirs eq 0}
 	<li><a onclick="showdirs();" href="{$files.1}" target="_self">[{t}Show Directories{/t}]</a></li>
 {else}
@@ -136,6 +143,7 @@ function iter_obj(object, callback) {
 	<li id="removeframes"><a href="#" onclick="removeframes(); return false;" target="_self">[{t}Remove Frames{/t}]</a></li>
 {/if *}
 <li id="refreshnewposts"><a href="#" onclick="updatenewpostscount(); return false;" target="_self">Обновить</a></li>
+<li><a href="{%KU_BOARDSPATH}/single.php" class="boardlink">[ Однопоток постов ]</a></li>
 </ul>
 {if empty($boards)}
 	<ul>
@@ -173,7 +181,8 @@ function iter_obj(object, callback) {
 			{/foreach}
 		{else}
 			<li>{t}No visible boards{/t}</li>
-		{/if}				<li><a href="{%KU_BOARDSPATH}/single.php" class="boardlink">[ Однопоток постов ]</a></li>		</ul>
+		{/if}
+		</ul>
 		{if %KU_MENUTYPE eq 'normal'}
 			</div>
 		{/if}
@@ -190,15 +199,15 @@ function iter_obj(object, callback) {
 <div id="search">
 <ul>
 <li>Перейти к посту:<form method="get" action="/read.php">
-<input type="text" size="3" name="b" value="sg"></input>
-<input type="text" size="7" name="p" value="206" class="defaultfield" id="searchpostmenu" onfocus="check_field('searchpostmenu',true);" onblur="check_field('searchpostmenu',false);"></input>
+<input type="text" size="3" name="b" value="{%KU_SEARCH_BOARD}"></input>
+<input type="text" size="7" name="p" value="{%KU_SEARCH_THREAD}" class="defaultfield" id="searchpostmenu" onfocus="check_field('searchpostmenu',true);" onblur="check_field('searchpostmenu',false);"></input>
 <input type="submit" value="Go!"></input>
 <input type="hidden" name="t" value="0"></input>
 <input type="hidden" name="issearch" value="true"></input>
 </form>
 <span style="font-size: 8px">&nbsp;</span></li>
 <li>Поиск текста на борде:<form method="get" action="/read.php">
-<input type="text" size="3" name="b" value="sg"></input>
+<input type="text" size="3" name="b" value="{%KU_SEARCH_BOARD}"></input>
 <input type="text" size="7" name="v" value="{$search_phrase}" class="defaultfield" id="searchtextmenu" onfocus="check_field('searchtextmenu',true);" onblur="check_field('searchtextmenu',false);"></input>
 <input type="submit" value="Go!"></input>
 </form>
